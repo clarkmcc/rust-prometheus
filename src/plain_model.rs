@@ -385,7 +385,7 @@ impl MetricFamily {
         &self.help
     }
 
-    pub fn set_field_type(&mut self, v: MetricType) {
+    pub fn set_type(&mut self, v: MetricType) {
         self.field_type = v;
     }
 

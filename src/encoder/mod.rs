@@ -3,6 +3,8 @@
 #[cfg(feature = "protobuf")]
 mod pb;
 mod text;
+#[cfg(feature = "json")]
+mod json;
 
 #[cfg(feature = "protobuf")]
 pub use self::pb::{ProtobufEncoder, PROTOBUF_FORMAT};
@@ -11,7 +13,7 @@ pub use self::text::{TextEncoder, TEXT_FORMAT};
 use std::io::Write;
 
 use crate::errors::{Error, Result};
-use crate::proto::MetricFamily;
+use ::proto::MetricFamily;
 
 /// An interface for encoding metric families into an underlying wire protocol.
 pub trait Encoder {
@@ -27,10 +29,10 @@ pub trait Encoder {
 }
 
 fn check_metric_family(mf: &MetricFamily) -> Result<()> {
-    if mf.get_metric().is_empty() {
+    if mf.metric().is_empty() {
         return Err(Error::Msg(format!("MetricFamily has no metrics: {:?}", mf)));
     }
-    if mf.get_name().is_empty() {
+    if mf.name().is_empty() {
         return Err(Error::Msg(format!("MetricFamily has no name: {:?}", mf)));
     }
     Ok(())

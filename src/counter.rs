@@ -10,7 +10,7 @@ use crate::atomic64::{Atomic, AtomicF64, AtomicU64, Number};
 use crate::desc::Desc;
 use crate::errors::Result;
 use crate::metrics::{Collector, LocalMetric, Metric, Opts};
-use crate::proto;
+use ::proto;
 use crate::value::{Value, ValueType};
 use crate::vec::{MetricVec, MetricVecBuilder};
 
@@ -343,9 +343,9 @@ mod tests {
         assert_eq!(mfs.len(), 1);
 
         let mf = mfs.pop().unwrap();
-        let m = mf.get_metric().get(0).unwrap();
-        assert_eq!(m.get_label().len(), 2);
-        assert_eq!(m.get_counter().get_value() as u64, 43);
+        let m = mf.metric().get(0).unwrap();
+        assert_eq!(m.label().len(), 2);
+        assert_eq!(m.counter().value() as u64, 43);
 
         counter.reset();
         assert_eq!(counter.get() as u64, 0);
@@ -363,9 +363,9 @@ mod tests {
         assert_eq!(mfs.len(), 1);
 
         let mf = mfs.pop().unwrap();
-        let m = mf.get_metric().get(0).unwrap();
-        assert_eq!(m.get_label().len(), 0);
-        assert_eq!(m.get_counter().get_value() as u64, 12);
+        let m = mf.metric().get(0).unwrap();
+        assert_eq!(m.label().len(), 0);
+        assert_eq!(m.counter().value() as u64, 12);
 
         counter.reset();
         assert_eq!(counter.get() as u64, 0);

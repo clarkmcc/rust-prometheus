@@ -27,6 +27,7 @@ enum MetricType {
   SUMMARY    = 2;
   UNTYPED    = 3;
   HISTOGRAM  = 4;
+  TEXT       = 5;
 }
 
 message Gauge {
@@ -52,6 +53,10 @@ message Untyped {
   optional double value = 1;
 }
 
+message Text {
+  optional string value = 1;
+}
+
 message Histogram {
   optional uint64 sample_count = 1;
   optional double sample_sum   = 2;
@@ -70,6 +75,7 @@ message Metric {
   optional Summary   summary      = 4;
   optional Untyped   untyped      = 5;
   optional Histogram histogram    = 7;
+  optional Text text              = 8;
   optional int64     timestamp_ms = 6;
 }
 

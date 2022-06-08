@@ -19,10 +19,13 @@ features = ["nightly"]
 
 [features]
 default = ["protobuf"]
-gen = ["protobuf-codegen-pure"]
+#gen = ["protobuf-codegen-pure"]
+gen = []
 nightly = ["libc"]
 process = ["libc", "procfs"]
 push = ["reqwest", "libc", "protobuf"]
+json = ["with-serde"]
+with-serde = []
 
 [dependencies]
 cfg-if = "^1.0"
@@ -30,10 +33,12 @@ fnv = "^1.0"
 lazy_static = "^1.4"
 libc = { version = "^0.2", optional = true }
 parking_lot = "^0.12"
-protobuf = { version = "^2.0", optional = true }
+protobuf = { version = "3.0.3", optional = true }
+proto = {path= "proto" }
 memchr = "^2.3"
 reqwest = { version = "^0.11", features = ["blocking"], optional = true }
 thiserror = "^1.0"
+protobuf-json-mapping = "3.0.3"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 procfs = { version = "^0.12", optional = true, default-features = false }
@@ -44,11 +49,8 @@ getopts = "^0.2"
 hyper = { version = "^0.14", features = ["server", "http1", "tcp"] }
 tokio = { version = "^1.0", features = ["macros", "rt-multi-thread"] }
 
-[build-dependencies]
-protobuf-codegen-pure = { version = "^2.0", optional = true }
-
 [workspace]
-members = ["static-metric"]
+members = ["static-metric", "proto"]
 
 [[bench]]
 name = "atomic"

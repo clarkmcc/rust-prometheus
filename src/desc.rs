@@ -8,7 +8,7 @@ use fnv::FnvHasher;
 
 use crate::errors::{Error, Result};
 use crate::metrics::SEPARATOR_BYTE;
-use crate::proto::LabelPair;
+use ::proto::LabelPair;
 
 // [a-zA-Z_]
 fn matches_charset_without_colon(c: char) -> bool {

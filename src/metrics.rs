@@ -1,12 +1,10 @@
 // Copyright 2014 The Prometheus Authors
 // Copyright 2019 TiKV Project Authors. Licensed under Apache-2.0.
 
-use std::cmp::{Eq, Ord, Ordering, PartialOrd};
 use std::collections::HashMap;
 
 use crate::desc::{Desc, Describer};
 use crate::errors::Result;
-use crate::proto::{self, LabelPair};
 use crate::timer;
 use std::cell::Cell;
 
@@ -175,20 +173,6 @@ impl Describer for Opts {
     }
 }
 
-impl Ord for LabelPair {
-    fn cmp(&self, other: &LabelPair) -> Ordering {
-        self.get_name().cmp(other.get_name())
-    }
-}
-
-impl Eq for LabelPair {}
-
-impl PartialOrd for LabelPair {
-    fn partial_cmp(&self, other: &LabelPair) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
 /// `build_fq_name` joins the given three name components by "_". Empty name
 /// components are ignored. If the name parameter itself is empty, an empty
 /// string is returned, no matter what. [`Metric`] implementations included in this
@@ -217,10 +201,10 @@ mod tests {
     use std::cmp::{Ord, Ordering};
 
     use super::*;
-    use crate::proto::LabelPair;
+    use ::proto::LabelPair;
 
-    fn new_label_pair(name: &str, value: &str) -> LabelPair {
-        let mut l = LabelPair::default();
+    fn new_label_pair(name: &str, value: &str) -> proto::LabelPair {
+        let mut l = proto::LabelPair::default();
         l.set_name(name.to_owned());
         l.set_value(value.to_owned());
         l

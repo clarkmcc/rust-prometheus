@@ -11,7 +11,7 @@ use parking_lot::RwLock;
 use crate::desc::{Desc, Describer};
 use crate::errors::{Error, Result};
 use crate::metrics::{Collector, Metric};
-use crate::proto::{MetricFamily, MetricType};
+use ::proto::{MetricFamily, MetricType};
 
 /// An interface for building a metric vector.
 pub trait MetricVecBuilder: Send + Sync + Clone {
@@ -38,14 +38,14 @@ impl<T: MetricVecBuilder> MetricVecCore<T> {
         let mut m = MetricFamily::default();
         m.set_name(self.desc.fq_name.clone());
         m.set_help(self.desc.help.clone());
-        m.set_field_type(self.metric_type);
+        m.set_type(self.metric_type);
 
         let children = self.children.read();
         let mut metrics = Vec::with_capacity(children.len());
         for child in children.values() {
             metrics.push(child.metric());
         }
-        m.set_metric(from_vec!(metrics));
+        m.set_metric(metrics);
         m
     }
 
@@ -425,10 +425,10 @@ mod tests {
         labels.insert("c", "a");
         let c = vec.get_metric_with(&labels).unwrap();
         let m = c.metric();
-        let label_pairs = m.get_label();
+        let label_pairs = m.label();
         assert_eq!(label_pairs.len(), labels.len());
         for lp in label_pairs.iter() {
-            assert_eq!(lp.get_value(), labels[lp.get_name()]);
+            assert_eq!(lp.value(), labels[lp.name()]);
         }
     }
 }

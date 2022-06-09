@@ -681,6 +681,22 @@ macro_rules! __register_gauge_vec {
     }};
 }
 
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __register_text_vec {
+    ($TYPE:ident, $OPTS:expr, $LABELS_NAMES:expr $(,)?) => {{
+        let text_vec = $crate::$TYPE::new($OPTS, $LABELS_NAMES).unwrap();
+        $crate::register(Box::new(text_vec.clone())).map(|_| text_vec)
+    }};
+
+    ($TYPE:ident, $OPTS:expr, $LABELS_NAMES:expr, $REGISTRY:expr $(,)?) => {{
+        let text_vec = $crate::$TYPE::new($OPTS, $LABELS_NAMES).unwrap();
+        $REGISTRY
+            .register(Box::new(text_vec.clone()))
+            .map(|_| text_vec)
+    }};
+}
+
 #[test]
 fn test_register_int_gauge() {
     use crate::Registry;
@@ -807,6 +823,60 @@ fn test_register_gauge_vec_with_registry_trailing_comma() {
         custom_registry,
     );
     assert!(gauge_vec.is_ok());
+}
+
+/// Create a [`GaugeVec`][crate::GaugeVec] and registers to a custom registry.
+///
+/// # Examples
+///
+/// ```
+/// # use prometheus::{register_gauge_vec_with_registry, opts};
+/// # use prometheus::Registry;
+/// # use std::collections::HashMap;
+/// # fn main() {
+/// let mut labels = HashMap::new();
+/// labels.insert("mykey".to_string(), "myvalue".to_string());
+/// let custom_registry = Registry::new_custom(Some("myprefix".to_string()), Some(labels)).unwrap();
+///
+/// let opts = opts!("test_macro_gauge_vec_1", "help");
+/// let gauge_vec = register_gauge_vec_with_registry!(opts, &["a", "b"], custom_registry);
+/// assert!(gauge_vec.is_ok());
+///
+/// let gauge_vec = register_gauge_vec_with_registry!("test_macro_gauge_vec_2", "help", &["a", "b"], custom_registry);
+/// assert!(gauge_vec.is_ok());
+/// # }
+/// ```
+#[macro_export(local_inner_macros)]
+macro_rules! register_text_vec_with_registry {
+    ($OPTS:expr, $LABELS_NAMES:expr, $REGISTRY:expr $(,)?) => {{
+        __register_text_vec!(TextVec, $OPTS, $LABELS_NAMES, $REGISTRY)
+    }};
+
+    ($NAME:expr, $HELP:expr, $LABELS_NAMES:expr, $REGISTRY:expr $(,)?) => {{
+        register_text_vec_with_registry!(opts!($NAME, $HELP), $LABELS_NAMES, $REGISTRY)
+    }};
+}
+
+#[test]
+fn test_register_text_vec_with_registry_trailing_comma() {
+    use crate::Registry;
+    use std::collections::HashMap;
+
+    let mut labels = HashMap::new();
+    labels.insert("mykey".to_string(), "myvalue".to_string());
+    let custom_registry = Registry::new_custom(Some("myprefix".to_string()), Some(labels)).unwrap();
+
+    let opts = opts!("test_macro_text_vec_1", "help",);
+    let text_vec = register_text_vec_with_registry!(opts, &["a", "b"], custom_registry,);
+    assert!(text_vec.is_ok());
+
+    let text_vec = register_text_vec_with_registry!(
+        "test_macro_text_vec_2",
+        "help",
+        &["a", "b"],
+        custom_registry,
+    );
+    assert!(text_vec.is_ok());
 }
 
 /// Create an [`IntGaugeVec`][crate::IntGaugeVec] and registers to default registry.

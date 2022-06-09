@@ -42,10 +42,10 @@ make_static_metric! {
 
 /// Helper method to get a label values of a `Counter`.
 fn get_labels(counter: &Counter) -> Vec<String> {
-    counter.collect()[0].get_metric()[0]
-        .get_label()
+    counter.collect()[0].metric()[0]
+        .label()
         .into_iter()
-        .map(|label| label.get_value().to_string())
+        .map(|label| label.value().to_string())
         .collect()
 }
 

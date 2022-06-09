@@ -1,15 +1,13 @@
 // Copyright 2019 TiKV Project Authors. Licensed under Apache-2.0.
 
-#[cfg(feature = "protobuf")]
-mod pb;
 mod text;
-
-#[cfg(feature = "protobuf")]
-pub use self::pb::{ProtobufEncoder, PROTOBUF_FORMAT};
-pub use self::text::{TextEncoder, TEXT_FORMAT};
+#[cfg(feature = "json")]
+mod json;
+#[cfg(feature = "json")]
+pub use self::json::{JSONEncoder, JSON_FORMAT};
 
 use std::io::Write;
-
+pub use self::text::{TextEncoder, TEXT_FORMAT};
 use crate::errors::{Error, Result};
 use crate::proto::MetricFamily;
 
@@ -27,10 +25,10 @@ pub trait Encoder {
 }
 
 fn check_metric_family(mf: &MetricFamily) -> Result<()> {
-    if mf.get_metric().is_empty() {
+    if mf.metric().is_empty() {
         return Err(Error::Msg(format!("MetricFamily has no metrics: {:?}", mf)));
     }
-    if mf.get_name().is_empty() {
+    if mf.name().is_empty() {
         return Err(Error::Msg(format!("MetricFamily has no name: {:?}", mf)));
     }
     Ok(())
@@ -43,34 +41,6 @@ mod tests {
     use crate::encoder::Encoder;
     use crate::metrics::Collector;
     use crate::metrics::Opts;
-
-    #[test]
-    #[cfg(feature = "protobuf")]
-    fn test_bad_proto_metrics() {
-        let mut writer = Vec::<u8>::new();
-        let pb_encoder = ProtobufEncoder::new();
-        let cv = CounterVec::new(
-            Opts::new("test_counter_vec", "help information"),
-            &["labelname"],
-        )
-        .unwrap();
-
-        // Empty metrics
-        let mfs = cv.collect();
-        check_metric_family(&mfs[0]).unwrap_err();
-        pb_encoder.encode(&mfs, &mut writer).unwrap_err();
-        assert_eq!(writer.len(), 0);
-
-        // Add a sub metric
-        cv.with_label_values(&["foo"]).inc();
-        let mut mfs = cv.collect();
-
-        // Empty name
-        (&mut mfs[0]).clear_name();
-        check_metric_family(&mfs[0]).unwrap_err();
-        pb_encoder.encode(&mfs, &mut writer).unwrap_err();
-        assert_eq!(writer.len(), 0);
-    }
 
     #[test]
     fn test_bad_text_metrics() {

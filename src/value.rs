@@ -2,9 +2,10 @@
 // Copyright 2019 TiKV Project Authors. Licensed under Apache-2.0.
 
 use crate::atomic64::{Atomic, Number};
+use crate::core::AtomicString;
 use crate::desc::{Desc, Describer};
 use crate::errors::{Error, Result};
-use crate::proto::{Counter, Gauge, LabelPair, Metric, MetricFamily, MetricType};
+use crate::proto::{Counter, Gauge, LabelPair, Metric, MetricFamily, MetricType, Text};
 
 /// `ValueType` is an enumeration of metric types that represent a simple value
 /// for [`Counter`] and [`Gauge`].
@@ -12,6 +13,7 @@ use crate::proto::{Counter, Gauge, LabelPair, Metric, MetricFamily, MetricType};
 pub enum ValueType {
     Counter,
     Gauge,
+    Text,
 }
 
 impl ValueType {
@@ -20,6 +22,7 @@ impl ValueType {
         match self {
             ValueType::Counter => MetricType::COUNTER,
             ValueType::Gauge => MetricType::GAUGE,
+            ValueType::Text => MetricType::TEXT,
         }
     }
 }
@@ -86,7 +89,7 @@ impl<P: Atomic> Value<P> {
 
     pub fn metric(&self) -> Metric {
         let mut m = Metric::default();
-        m.set_label(from_vec!(self.label_pairs.clone()));
+        m.set_label(self.label_pairs.clone());
 
         let val = self.get();
         match self.val_type {
@@ -100,6 +103,69 @@ impl<P: Atomic> Value<P> {
                 gauge.set_value(val.into_f64());
                 m.set_gauge(gauge);
             }
+            ValueType::Text => unimplemented!()
+        }
+        m
+    }
+
+    pub fn collect(&self) -> MetricFamily {
+        let mut m = MetricFamily::default();
+        m.set_name(self.desc.fq_name.clone());
+        m.set_help(self.desc.help.clone());
+        m.set_type(self.val_type.metric_type());
+        m.set_metric(vec![self.metric()]);
+        m
+    }
+}
+
+#[derive(Debug)]
+pub struct StringValue {
+    pub desc: Desc,
+    pub val: AtomicString,
+    pub val_type: ValueType,
+    pub label_pairs: Vec<LabelPair>,
+}
+
+impl StringValue {
+    pub fn new<D: Describer>(
+        describer: &D,
+        val_type: ValueType,
+        val: String,
+        label_values: &[&str],
+    ) -> Result<Self> {
+        let desc = describer.describe()?;
+        let label_pairs = make_label_pairs(&desc, label_values)?;
+
+        Ok(Self {
+            desc,
+            val: AtomicString::new(val),
+            val_type,
+            label_pairs,
+        })
+    }
+
+    #[inline]
+    pub fn get(&self) -> String {
+        self.val.get()
+    }
+
+    #[inline]
+    pub fn set(&self, val: String) {
+        self.val.set(val);
+    }
+
+    pub fn metric(&self) -> Metric {
+        let mut m = Metric::default();
+        m.set_label(self.label_pairs.clone());
+
+        let val = self.get();
+        match self.val_type {
+            ValueType::Text => {
+                let mut text = Text::default();
+                text.set_value(val);
+                m.set_text(text);
+            },
+            _ => unimplemented!()
         }
 
         m
@@ -109,8 +175,8 @@ impl<P: Atomic> Value<P> {
         let mut m = MetricFamily::default();
         m.set_name(self.desc.fq_name.clone());
         m.set_help(self.desc.help.clone());
-        m.set_field_type(self.val_type.metric_type());
-        m.set_metric(from_vec!(vec![self.metric()]));
+        m.set_type(self.val_type.metric_type());
+        m.set_metric(vec![self.metric()]);
         m
     }
 }

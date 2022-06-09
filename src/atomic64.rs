@@ -5,6 +5,7 @@ use std::cmp::*;
 use std::f64;
 use std::ops::*;
 use std::sync::atomic::{AtomicI64 as StdAtomicI64, AtomicU64 as StdAtomicU64, Ordering};
+use std::sync::RwLock;
 
 /// An interface for numbers. Used to generically model float metrics and integer metrics, i.e.
 /// [`Counter`](crate::Counter) and [`IntCounter`](crate::Counter).
@@ -68,6 +69,16 @@ pub trait Atomic: Send + Sync {
     fn inc_by(&self, delta: Self::T);
     /// Decrement the value by a given amount.
     fn dec_by(&self, delta: Self::T);
+}
+
+/// An interface for atomics. Used to generically model string metrics,
+pub trait StringAtomic: Send + Sync {
+    /// Create a new atomic value.
+    fn new<S>(val: S) -> Self where S: Into<String>;
+    /// Set the value to the provided value.
+    fn set<S>(&self, val: S) where S: Into<String>;
+    /// Get the value.
+    fn get(&self) -> String;
 }
 
 /// A atomic float.
@@ -239,6 +250,40 @@ impl AtomicU64 {
     }
 }
 
+/// A atomic string.
+#[derive(Debug)]
+pub struct AtomicString {
+    inner: RwLock<String>,
+}
+
+impl AtomicString {
+    /// Creates a new instance of a string guarded by a RwLock
+    pub fn new<S>(val: S) -> AtomicString
+        where
+            S: Into<String>,
+    {
+        AtomicString {
+            inner: RwLock::new(val.into()),
+        }
+    }
+
+    /// Sets the string value
+    #[inline]
+    pub fn set<S>(&self, val: S)
+        where
+            S: Into<String>,
+    {
+        let mut guard = self.inner.write().unwrap();
+        *guard = val.into();
+    }
+
+    /// Returns the stored string value
+    #[inline]
+    pub fn get(&self) -> String {
+        self.inner.read().unwrap().to_string()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::f64::consts::PI;
@@ -274,5 +319,14 @@ mod test {
 
         au64.inc_by(123);
         assert_eq!(au64.get(), 123);
+    }
+
+    #[test]
+    fn test_atomic_string() {
+        let value = AtomicString::new("foobar");
+        assert_eq!("foobar", value.get());
+
+        value.set("barbaz");
+        assert_eq!("barbaz", value.get());
     }
 }

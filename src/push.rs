@@ -125,21 +125,21 @@ fn push<S: BuildHasher>(
 
     for mf in mfs {
         // Check for pre-existing grouping labels:
-        for m in mf.get_metric() {
-            for lp in m.get_label() {
-                if lp.get_name() == LABEL_NAME_JOB {
+        for m in mf.metric() {
+            for lp in m.label() {
+                if lp.name() == LABEL_NAME_JOB {
                     return Err(Error::Msg(format!(
                         "pushed metric {} already contains a \
                          job label",
-                        mf.get_name()
+                        mf.name()
                     )));
                 }
-                if grouping.contains_key(lp.get_name()) {
+                if grouping.contains_key(lp.name()) {
                     return Err(Error::Msg(format!(
                         "pushed metric {} already contains \
                          grouping label {}",
-                        mf.get_name(),
-                        lp.get_name()
+                        mf.name(),
+                        lp.name()
                     )));
                 }
             }

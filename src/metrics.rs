@@ -1,14 +1,13 @@
 // Copyright 2014 The Prometheus Authors
 // Copyright 2019 TiKV Project Authors. Licensed under Apache-2.0.
 
-use std::cmp::{Eq, Ord, Ordering, PartialOrd};
 use std::collections::HashMap;
 
 use crate::desc::{Desc, Describer};
 use crate::errors::Result;
-use crate::proto::{self, LabelPair};
-use crate::timer;
+use crate::{proto, timer};
 use std::cell::Cell;
+use crate::proto::MetricFamily;
 
 pub const SEPARATOR_BYTE: u8 = 0xFF;
 
@@ -18,7 +17,7 @@ pub trait Collector: Sync + Send {
     fn desc(&self) -> Vec<&Desc>;
 
     /// Collect metrics.
-    fn collect(&self) -> Vec<proto::MetricFamily>;
+    fn collect(&self) -> Vec<MetricFamily>;
 }
 
 /// An interface models a single sample value with its meta data being exported to Prometheus.
@@ -172,20 +171,6 @@ impl Describer for Opts {
             self.variable_labels.clone(),
             self.const_labels.clone(),
         )
-    }
-}
-
-impl Ord for LabelPair {
-    fn cmp(&self, other: &LabelPair) -> Ordering {
-        self.get_name().cmp(other.get_name())
-    }
-}
-
-impl Eq for LabelPair {}
-
-impl PartialOrd for LabelPair {
-    fn partial_cmp(&self, other: &LabelPair) -> Option<Ordering> {
-        Some(self.cmp(other))
     }
 }
 

@@ -1,21 +1,24 @@
-use std::io;
-use std::io::{Write};
+use std::io::{self, Write};
 use protobuf::text_format::print_to_string;
-use proto::MetricFamily;
+use crate::proto::{MetricFamily, MetricType};
 use crate::Encoder;
+use crate::encoder::check_metric_family;
+use crate::encoder::text::{StringBuf, WriteUtf8};
 use crate::errors::Result;
 
-#[derive(Default)]
-pub struct JSONEncoder;
 
 pub const JSON_FORMAT: &str = "application/json; version=0.0.1";
+
+/// An implementation of an [`Encoder`] that converts a [`MetricFamily`] proto message
+/// into text format.
+#[derive(Debug, Default)]
+pub struct JSONEncoder;
 
 impl JSONEncoder {
     /// Create a new text encoder.
     pub fn new() -> JSONEncoder {
         JSONEncoder
     }
-
     /// Appends metrics to a given `String` buffer.
     ///
     /// This is a convenience wrapper around `<TextEncoder as Encoder>::encode`.
@@ -41,16 +44,14 @@ impl JSONEncoder {
         metric_families: &[MetricFamily],
         writer: &mut dyn WriteUtf8,
     ) -> Result<()> {
-        self.encode(metric_families, writer)
+        writer.write_all(serde_json::to_string(metric_families).unwrap().as_str())?;
+        Ok(())
     }
 }
 
 impl Encoder for JSONEncoder {
-    fn encode<W: Write>(&self, mfs: &[MetricFamily], writer: &mut W) -> crate::Result<()> {
-        let string = print_to_string(mfs).unwrap();
-        // let str = serde_json::to_string(mfs).map_err(||Err(()))?;
-        writer.write(string).unwrap();
-        Ok(())
+    fn encode<W: Write>(&self, metric_families: &[MetricFamily], writer: &mut W) -> Result<()> {
+        self.encode_impl(metric_families, &mut *writer)
     }
 
     fn format_type(&self) -> &str {
@@ -58,30 +59,10 @@ impl Encoder for JSONEncoder {
     }
 }
 
-trait WriteUtf8 {
-    fn write_all(&mut self, text: &str) -> io::Result<()>;
-}
-
-impl<W: Write> WriteUtf8 for W {
-    fn write_all(&mut self, text: &str) -> io::Result<()> {
-        Write::write_all(self, text.as_bytes())
-    }
-}
-
-/// Coherence forbids to impl `WriteUtf8` directly on `String`, need this
-/// wrapper as a work-around.
-struct StringBuf<'a>(&'a mut String);
-
-impl WriteUtf8 for StringBuf<'_> {
-    fn write_all(&mut self, text: &str) -> io::Result<()> {
-        self.0.push_str(text);
-        Ok(())
-    }
-}
-
 mod tests {
     use crate::encoder::json::JSONEncoder;
     use crate::{Counter, CounterVec, Encoder, Opts, Registry};
+    use crate::metrics::Collector;
 
     #[test]
     fn test() {
@@ -96,11 +77,7 @@ mod tests {
         let encoder = JSONEncoder::new();
         let txt = encoder.encode_to_string(&mf);
         let txt = txt.unwrap();
-
-        let counter_ans = r##"# HELP test_counter test help
-# TYPE test_counter counter
-test_counter{a="1",b="2"} 1
-"##;
+        let counter_ans = r##"[{"name":"test_counter","help":"test help","field_type":"COUNTER","metric":[{"label":[{"name":"a","value":"1"},{"name":"b","value":"2"}],"gauge":null,"counter":{"value":1.0},"summary":null,"untyped":null,"histogram":null,"text":null,"timestamp_ms":0}]}]"##;
         assert_eq!(counter_ans, txt.as_str());
     }
 }

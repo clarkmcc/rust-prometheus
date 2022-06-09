@@ -11,7 +11,7 @@ use parking_lot::RwLock;
 use crate::desc::{Desc, Describer};
 use crate::errors::{Error, Result};
 use crate::metrics::{Collector, Metric};
-use ::proto::{MetricFamily, MetricType};
+use crate::proto::{MetricFamily, MetricType};
 
 /// An interface for building a metric vector.
 pub trait MetricVecBuilder: Send + Sync + Clone {

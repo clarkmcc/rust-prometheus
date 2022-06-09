@@ -5,8 +5,9 @@ use std::collections::HashMap;
 
 use crate::desc::{Desc, Describer};
 use crate::errors::Result;
-use crate::timer;
+use crate::{proto, timer};
 use std::cell::Cell;
+use crate::proto::MetricFamily;
 
 pub const SEPARATOR_BYTE: u8 = 0xFF;
 
@@ -16,7 +17,7 @@ pub trait Collector: Sync + Send {
     fn desc(&self) -> Vec<&Desc>;
 
     /// Collect metrics.
-    fn collect(&self) -> Vec<proto::MetricFamily>;
+    fn collect(&self) -> Vec<MetricFamily>;
 }
 
 /// An interface models a single sample value with its meta data being exported to Prometheus.
@@ -201,10 +202,10 @@ mod tests {
     use std::cmp::{Ord, Ordering};
 
     use super::*;
-    use ::proto::LabelPair;
+    use crate::proto::LabelPair;
 
-    fn new_label_pair(name: &str, value: &str) -> proto::LabelPair {
-        let mut l = proto::LabelPair::default();
+    fn new_label_pair(name: &str, value: &str) -> LabelPair {
+        let mut l = LabelPair::default();
         l.set_name(name.to_owned());
         l.set_value(value.to_owned());
         l

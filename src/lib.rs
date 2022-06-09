@@ -122,32 +122,8 @@ This library supports four features:
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 
-/// Protocol buffers format of metrics.
-// #[cfg(feature = "protobuf")]
-// #[allow(warnings)]
-// #[rustfmt::skip]
-// #[path = "../proto/proto_model.rs"]
-// pub mod proto;
-// extern crate protos;
-// pub mod protos;
-
-// #[cfg(feature = "protobuf")]
-// macro_rules! from_vec {
-//     ($e: expr) => {
-//         ::protobuf::RepeatedField::from_vec($e)
-//     };
-// }
-
-// #[cfg(not(feature = "protobuf"))]
-// #[path = "plain_model.rs"]
-// pub mod proto;
-
-#[cfg(not(feature = "protobuf"))]
-macro_rules! from_vec {
-    ($e: expr) => {
-        $e
-    };
-}
+#[path = "plain_model.rs"]
+pub mod proto;
 
 #[macro_use]
 mod macros;
@@ -210,11 +186,9 @@ pub mod core {
 
 pub use self::counter::{Counter, CounterVec, IntCounter, IntCounterVec};
 pub use self::encoder::Encoder;
-#[cfg(feature = "protobuf")]
-pub use self::encoder::ProtobufEncoder;
 pub use self::encoder::TextEncoder;
-#[cfg(feature = "protobuf")]
-pub use self::encoder::PROTOBUF_FORMAT;
+#[cfg(feature = "json")]
+pub use self::encoder::JSONEncoder;
 pub use self::encoder::TEXT_FORMAT;
 pub use self::errors::{Error, Result};
 pub use self::gauge::{Gauge, GaugeVec, IntGauge, IntGaugeVec};

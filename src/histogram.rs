@@ -14,9 +14,10 @@ use crate::atomic64::{Atomic, AtomicF64, AtomicU64};
 use crate::desc::{Desc, Describer};
 use crate::errors::{Error, Result};
 use crate::metrics::{Collector, LocalMetric, Metric, Opts};
+use crate::proto;
 use crate::value::make_label_pairs;
 use crate::vec::{MetricVec, MetricVecBuilder};
-use ::proto::{Bucket};
+use crate::proto::{Bucket, MetricFamily, MetricType};
 
 /// The default [`Histogram`] buckets. The default buckets are
 /// tailored to broadly measure the response time (in seconds) of a
@@ -765,11 +766,11 @@ impl Collector for Histogram {
         vec![&self.core.desc]
     }
 
-    fn collect(&self) -> Vec<proto::MetricFamily> {
-        let mut m = proto::MetricFamily::default();
+    fn collect(&self) -> Vec<MetricFamily> {
+        let mut m = MetricFamily::default();
         m.set_name(self.core.desc.fq_name.clone());
         m.set_help(self.core.desc.help.clone());
-        m.set_type(proto::MetricType::HISTOGRAM);
+        m.set_type(MetricType::HISTOGRAM);
         m.set_metric(vec![self.metric()]);
 
         vec![m]

@@ -5,7 +5,7 @@ use std::io::{self, Write};
 
 use crate::errors::Result;
 use crate::histogram::BUCKET_LABEL;
-use ::proto::{self, MetricFamily, MetricType};
+use crate::proto::{self, MetricFamily, MetricType};
 
 use super::{check_metric_family, Encoder};
 
@@ -296,7 +296,7 @@ fn escape_string(v: &str, include_double_quote: bool) -> Cow<'_, str> {
     }
 }
 
-trait WriteUtf8 {
+pub trait WriteUtf8 {
     fn write_all(&mut self, text: &str) -> io::Result<()>;
 }
 
@@ -308,7 +308,7 @@ impl<W: Write> WriteUtf8 for W {
 
 /// Coherence forbids to impl `WriteUtf8` directly on `String`, need this
 /// wrapper as a work-around.
-struct StringBuf<'a>(&'a mut String);
+pub struct StringBuf<'a>(pub &'a mut String);
 
 impl WriteUtf8 for StringBuf<'_> {
     fn write_all(&mut self, text: &str) -> io::Result<()> {
@@ -319,7 +319,7 @@ impl WriteUtf8 for StringBuf<'_> {
 
 #[cfg(test)]
 mod tests {
-    use ::proto::{Metric, MetricFamily, MetricType, Quantile};
+    use crate::proto::{Metric, MetricFamily, MetricType, Quantile};
     use super::*;
     use crate::counter::Counter;
     use crate::gauge::Gauge;
@@ -413,7 +413,7 @@ test_histogram_count{a="1"} 1
 
     #[test]
     fn test_text_encoder_summary() {
-        use ::proto::{Metric, Quantile, Summary};
+        use crate::proto::{Metric, Quantile, Summary};
         use std::str;
 
         let mut metric_family = MetricFamily::default();

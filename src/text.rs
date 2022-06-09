@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use crate::core::{Collector, Desc, Metric, MetricVec, MetricVecBuilder};
-use crate::{Opts};
+use crate::{Opts, proto};
 use crate::value::{StringValue, ValueType};
 use crate::errors::Result;
 
@@ -139,6 +139,6 @@ mod tests {
         vec.with_label_values(&["life"]).set("bar");
 
         let mf = vec.collect();
-        assert_eq!(mf[0].metric.len(), 2)
+        assert_eq!(mf[0].metric().len(), 2)
     }
 }

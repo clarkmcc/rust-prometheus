@@ -5,7 +5,11 @@
 
 #![allow(missing_docs)]
 
-#[derive(PartialEq, Clone, Default, Debug)]
+use std::borrow::Borrow;
+use std::cmp::Ordering;
+use serde::{Serialize, Deserialize};
+
+#[derive(PartialEq, Clone, Default, Debug, Serialize)]
 pub struct LabelPair {
     name: String,
     value: String,
@@ -29,7 +33,7 @@ impl LabelPair {
         self.name = v;
     }
 
-    pub fn get_name(&self) -> &str {
+    pub fn name(&self) -> &str {
         &self.name
     }
 
@@ -37,12 +41,26 @@ impl LabelPair {
         self.value = v;
     }
 
-    pub fn get_value(&self) -> &str {
+    pub fn value(&self) -> &str {
         &self.value
     }
 }
 
-#[derive(PartialEq, Clone, Default, Debug)]
+impl Ord for LabelPair {
+    fn cmp(&self, other: &LabelPair) -> Ordering {
+        self.name().cmp(other.name())
+    }
+}
+
+impl Eq for LabelPair {}
+
+impl PartialOrd for LabelPair {
+    fn partial_cmp(&self, other: &LabelPair) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+#[derive(PartialEq, Clone, Default, Debug, Serialize)]
 pub struct Gauge {
     value: f64,
 }
@@ -57,12 +75,12 @@ impl Gauge {
         self.value = v;
     }
 
-    pub fn get_value(&self) -> f64 {
+    pub fn value(&self) -> f64 {
         self.value
     }
 }
 
-#[derive(PartialEq, Clone, Default, Debug)]
+#[derive(PartialEq, Clone, Default, Debug, Serialize)]
 pub struct Counter {
     value: f64,
 }
@@ -78,12 +96,12 @@ impl Counter {
         self.value = v;
     }
 
-    pub fn get_value(&self) -> f64 {
+    pub fn value(&self) -> f64 {
         self.value
     }
 }
 
-#[derive(PartialEq, Clone, Default, Debug)]
+#[derive(PartialEq, Clone, Default, Debug, Serialize)]
 pub struct Quantile {
     quantile: f64,
     value: f64,
@@ -99,7 +117,7 @@ impl Quantile {
         self.quantile = v;
     }
 
-    pub fn get_quantile(&self) -> f64 {
+    pub fn quantile(&self) -> f64 {
         self.quantile
     }
 
@@ -107,12 +125,12 @@ impl Quantile {
         self.value = v;
     }
 
-    pub fn get_value(&self) -> f64 {
+    pub fn value(&self) -> f64 {
         self.value
     }
 }
 
-#[derive(PartialEq, Clone, Default, Debug)]
+#[derive(PartialEq, Clone, Default, Debug, Serialize)]
 pub struct Summary {
     sample_count: u64,
     sample_sum: f64,
@@ -129,7 +147,7 @@ impl Summary {
         self.sample_count = v;
     }
 
-    pub fn get_sample_count(&self) -> u64 {
+    pub fn sample_count(&self) -> u64 {
         self.sample_count
     }
 
@@ -137,7 +155,7 @@ impl Summary {
         self.sample_sum = v;
     }
 
-    pub fn get_sample_sum(&self) -> f64 {
+    pub fn sample_sum(&self) -> f64 {
         self.sample_sum
     }
 
@@ -145,12 +163,12 @@ impl Summary {
         self.quantile = v;
     }
 
-    pub fn get_quantile(&self) -> &[Quantile] {
+    pub fn quantile(&self) -> &[Quantile] {
         &self.quantile
     }
 }
 
-#[derive(PartialEq, Clone, Default, Debug)]
+#[derive(PartialEq, Clone, Default, Debug, Serialize)]
 pub struct Untyped {
     value: f64,
 }
@@ -173,12 +191,12 @@ impl Untyped {
         note = "Untyped struct is protobuf specific and will be removed in a future version",
         since = "0.5.1"
     )]
-    pub fn get_value(&self) -> f64 {
+    pub fn value(&self) -> f64 {
         self.value
     }
 }
 
-#[derive(PartialEq, Clone, Default, Debug)]
+#[derive(PartialEq, Clone, Default, Debug, Serialize)]
 pub struct Histogram {
     sample_count: u64,
     sample_sum: f64,
@@ -195,7 +213,7 @@ impl Histogram {
         self.sample_count = v;
     }
 
-    pub fn get_sample_count(&self) -> u64 {
+    pub fn sample_count(&self) -> u64 {
         self.sample_count
     }
 
@@ -203,7 +221,7 @@ impl Histogram {
         self.sample_sum = v;
     }
 
-    pub fn get_sample_sum(&self) -> f64 {
+    pub fn sample_sum(&self) -> f64 {
         self.sample_sum
     }
 
@@ -211,12 +229,32 @@ impl Histogram {
         self.bucket = v;
     }
 
-    pub fn get_bucket(&self) -> &[Bucket] {
+    pub fn bucket(&self) -> &[Bucket] {
         &self.bucket
     }
 }
 
-#[derive(PartialEq, Clone, Default, Debug)]
+#[derive(PartialEq, Clone, Default, Debug, Serialize)]
+pub struct Text {
+    value: String,
+}
+
+impl Text {
+    #[deprecated(note = "Use default()", since = "0.5.1")]
+    pub fn new() -> Text {
+        Default::default()
+    }
+
+    pub fn set_value(&mut self, v: String) {
+        self.value = v;
+    }
+
+    pub fn value(&self) -> String {
+        self.value.clone()
+    }
+}
+
+#[derive(PartialEq, Clone, Default, Debug, Serialize)]
 pub struct Bucket {
     cumulative_count: u64,
     upper_bound: f64,
@@ -232,7 +270,7 @@ impl Bucket {
         self.cumulative_count = v;
     }
 
-    pub fn get_cumulative_count(&self) -> u64 {
+    pub fn cumulative_count(&self) -> u64 {
         self.cumulative_count
     }
 
@@ -240,20 +278,21 @@ impl Bucket {
         self.upper_bound = v;
     }
 
-    pub fn get_upper_bound(&self) -> f64 {
+    pub fn upper_bound(&self) -> f64 {
         self.upper_bound
     }
 }
 
-#[derive(PartialEq, Clone, Default, Debug)]
+#[derive(PartialEq, Clone, Default, Debug, Serialize)]
 pub struct Metric {
     // message fields
     label: Vec<LabelPair>,
-    gauge: Gauge,
-    counter: Counter,
-    summary: Summary,
-    untyped: Untyped,
-    histogram: Histogram,
+    gauge: Option<Gauge>,
+    counter: Option<Counter>,
+    summary: Option<Summary>,
+    untyped: Option<Untyped>,
+    histogram: Option<Histogram>,
+    text: Option<Text>,
     timestamp_ms: i64,
 }
 
@@ -275,32 +314,32 @@ impl Metric {
         ::std::mem::replace(&mut self.label, Vec::new())
     }
 
-    pub fn get_label(&self) -> &[LabelPair] {
+    pub fn label(&self) -> &[LabelPair] {
         &self.label
     }
 
     pub fn set_gauge(&mut self, v: Gauge) {
-        self.gauge = v;
+        self.gauge = Some(v);
     }
 
-    pub fn get_gauge(&self) -> &Gauge {
-        &self.gauge
+    pub fn gauge(&self) -> &Gauge {
+        self.gauge.as_ref().unwrap()
     }
 
     pub fn set_counter(&mut self, v: Counter) {
-        self.counter = v;
+        self.counter = Some(v);
     }
 
-    pub fn get_counter(&self) -> &Counter {
-        &self.counter
+    pub fn counter(&self) -> &Counter {
+        self.counter.as_ref().unwrap()
     }
 
     pub fn set_summary(&mut self, v: Summary) {
-        self.summary = v;
+        self.summary = Some(v);
     }
 
-    pub fn get_summary(&self) -> &Summary {
-        &self.summary
+    pub fn summary(&self) -> &Summary {
+        self.summary.as_ref().unwrap()
     }
 
     #[deprecated(
@@ -308,41 +347,50 @@ impl Metric {
         since = "0.5.1"
     )]
     pub fn set_untyped(&mut self, v: Untyped) {
-        self.untyped = v;
+        self.untyped = Some(v);
     }
 
     #[deprecated(
         note = "This method is protobuf specific and will be removed in a future version",
         since = "0.5.1"
     )]
-    pub fn get_untyped(&self) -> &Untyped {
-        &self.untyped
+    pub fn untyped(&self) -> &Untyped {
+        self.untyped.as_ref().unwrap()
     }
 
     pub fn set_histogram(&mut self, v: Histogram) {
-        self.histogram = v;
+        self.histogram = Some(v);
     }
 
-    pub fn get_histogram(&self) -> &Histogram {
-        &self.histogram
+    pub fn histogram(&self) -> &Histogram {
+        self.histogram.as_ref().unwrap()
+    }
+
+    pub fn set_text(&mut self, v: Text) {
+        self.text = Some(v)
+    }
+
+    pub fn text(&self) -> &Text {
+        self.text.as_ref().unwrap()
     }
 
     pub fn set_timestamp_ms(&mut self, v: i64) {
         self.timestamp_ms = v;
     }
 
-    pub fn get_timestamp_ms(&self) -> i64 {
+    pub fn timestamp_ms(&self) -> i64 {
         self.timestamp_ms
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug, Hash, Copy)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash, Copy, Serialize)]
 pub enum MetricType {
     COUNTER,
     GAUGE,
     SUMMARY,
     UNTYPED,
     HISTOGRAM,
+    TEXT,
 }
 
 impl Default for MetricType {
@@ -351,7 +399,7 @@ impl Default for MetricType {
     }
 }
 
-#[derive(PartialEq, Clone, Default, Debug)]
+#[derive(PartialEq, Clone, Default, Debug, Serialize)]
 pub struct MetricFamily {
     name: String,
     help: String,
@@ -373,7 +421,7 @@ impl MetricFamily {
         self.name = v;
     }
 
-    pub fn get_name(&self) -> &str {
+    pub fn name(&self) -> &str {
         &self.name
     }
 
@@ -381,7 +429,7 @@ impl MetricFamily {
         self.help = v;
     }
 
-    pub fn get_help(&self) -> &str {
+    pub fn help(&self) -> &str {
         &self.help
     }
 
@@ -389,7 +437,7 @@ impl MetricFamily {
         self.field_type = v;
     }
 
-    pub fn get_field_type(&self) -> MetricType {
+    pub fn type_(&self) -> MetricType {
         self.field_type
     }
 
@@ -413,7 +461,7 @@ impl MetricFamily {
         ::std::mem::replace(&mut self.metric, Vec::new())
     }
 
-    pub fn get_metric(&self) -> &[Metric] {
+    pub fn metric(&self) -> &[Metric] {
         &self.metric
     }
 }

@@ -10,7 +10,7 @@ use parking_lot::RwLock;
 
 use crate::errors::{Error, Result};
 use crate::metrics::Collector;
-use ::proto;
+use crate::proto;
 
 use cfg_if::cfg_if;
 use lazy_static::lazy_static;
@@ -341,7 +341,7 @@ mod tests {
     use crate::counter::{Counter, CounterVec};
     use crate::desc::Desc;
     use crate::metrics::{Collector, Opts};
-    use ::proto;
+    use crate::proto;
 
     #[test]
     fn test_registry() {

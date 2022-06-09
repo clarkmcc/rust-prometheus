@@ -10,7 +10,7 @@ use crate::atomic64::{Atomic, AtomicF64, AtomicU64, Number};
 use crate::desc::Desc;
 use crate::errors::Result;
 use crate::metrics::{Collector, LocalMetric, Metric, Opts};
-use ::proto;
+use crate::proto;
 use crate::value::{Value, ValueType};
 use crate::vec::{MetricVec, MetricVecBuilder};
 

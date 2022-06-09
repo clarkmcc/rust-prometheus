@@ -5,7 +5,7 @@ use crate::atomic64::{Atomic, Number};
 use crate::core::AtomicString;
 use crate::desc::{Desc, Describer};
 use crate::errors::{Error, Result};
-use proto::{Counter, Gauge, LabelPair, Metric, MetricFamily, MetricType, Text};
+use crate::proto::{Counter, Gauge, LabelPair, Metric, MetricFamily, MetricType, Text};
 
 /// `ValueType` is an enumeration of metric types that represent a simple value
 /// for [`Counter`] and [`Gauge`].
